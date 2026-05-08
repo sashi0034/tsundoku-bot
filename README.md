@@ -30,6 +30,7 @@ OAuth & Permissions の Bot Token Scopes に以下を追加してください。
 - `chat:write`: チェック済み URL を指定スレッドへ投稿する
 - `canvases:read`: Canvas 内のチェック済み項目を検索する
 - `canvases:write`: Canvas に URL を追加し、チェック済み項目を削除または置換する
+- `files:read`: Canvas の生データを取得してチェック状態を読み取る
 
 private channel を監視・投稿対象にする場合は、bot をその channel に追加してください。投稿先 channel でも bot が投稿できる必要があります。
 
@@ -61,6 +62,7 @@ oauth_config:
       - canvases:read
       - canvases:write
       - chat:write
+      - files:read
 settings:
   event_subscriptions:
     bot_events:
@@ -87,7 +89,7 @@ cp .env.example .env
 設定する値:
 
 - `SLACK_BOT_TOKEN`: Bot User OAuth Token。`xoxb-` で始まる値
-- `SLACK_APP_TOKEN`: Socket Mode 用 App-Level Token。`xapp-` で始まる値
+- `SLACK_APP_TOKEN`: Socket Mode 用 App-Level Token。`xapp-` で始まる値（`SLACK_SIGNING_SECRET` は Socket Mode では不要）
 - `CANVAS_ID`: URL を保存する Canvas ID。`F...` 形式
 - `THREAD_CHANNEL_ID`: チェック済み URL を投稿するスレッドの channel ID
 - `THREAD_TS`: チェック済み URL を投稿するスレッドの親メッセージ timestamp
@@ -132,7 +134,7 @@ npm start
 
 1. bot を監視対象 channel と投稿先 thread の channel に追加します。
 2. 監視対象 channel に URL を含むメッセージを投稿します。
-3. 対象 Canvas に `- [ ] https://...` の形式で URL が追加されることを確認します。
+3. 対象 Canvas の先頭に `- [ ] https://...` の形式で URL が追加されることを確認します（複数 URL は最新が上になります）。
 4. Canvas 上で項目をチェック済み、つまり `- [x] https://...` にします。
 5. 起動直後または次回スケジュール実行時に、チェック済み URL が指定スレッドへ投稿され、Canvas から処理済み項目が削除されることを確認します。
 
