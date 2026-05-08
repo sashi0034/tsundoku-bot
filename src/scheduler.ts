@@ -1,0 +1,40 @@
+import { App } from '@slack/bolt';
+import { appConfig, canvasId, threadChannelId, threadTs } from './config';
+import { processCheckedItems } from './canvasService';
+
+export function startScheduler(app: App): void {
+  const intervalMs = appConfig.scheduleIntervalMinutes * 60 * 1000;
+
+  console.log(
+    `[scheduler] ${appConfig.scheduleIntervalMinutes}分ごとにCanvasをチェックします`,
+  );
+
+  // 起動直後に一度実行してから定期実行
+  void runProcess(app);
+  setInterval(() => void runProcess(app), intervalMs);
+}
+
+async function runProcess(app: App): Promise<void> {
+  app.logger.info('[scheduler] Canvas チェック開始');
+
+  try {
+    const checkedUrls = await processCheckedItems(app.client, canvasId);
+
+    if (checkedUrls.length === 0) {
+      app.logger.info('[scheduler] チェック済みアイテムなし');
+      return;
+    }
+
+    app.logger.info(`[scheduler] ${checkedUrls.length}件をスレッドに投稿します`);
+
+    await app.client.chat.postMessage({
+      channel: threadChannelId,
+      thread_ts: threadTs,
+      text: checkedUrls.join('\n'),
+    });
+
+    app.logger.info('[scheduler] スレッド投稿完了');
+  } catch (error) {
+    app.logger.error('[scheduler] エラー:', error);
+  }
+}
