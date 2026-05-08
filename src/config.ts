@@ -32,7 +32,6 @@ export const appConfig = loadAppConfig();
 
 export const slackConfig = {
   botToken: requireEnv('SLACK_BOT_TOKEN'),
-  signingSecret: requireEnv('SLACK_SIGNING_SECRET'),
   appToken: requireEnv('SLACK_APP_TOKEN'),
 };
 

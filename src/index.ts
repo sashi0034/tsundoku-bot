@@ -5,7 +5,6 @@ import { startScheduler } from './scheduler';
 
 const app = new App({
   token: slackConfig.botToken,
-  signingSecret: slackConfig.signingSecret,
   socketMode: true,
   appToken: slackConfig.appToken,
 });
