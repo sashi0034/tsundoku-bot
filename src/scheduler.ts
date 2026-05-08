@@ -1,5 +1,5 @@
 import { App } from '@slack/bolt';
-import { appConfig, canvasId, threadChannelId, threadTs } from './config';
+import { appConfig, canvasId, postChannelId } from './config';
 import { processCheckedItems, fetchPageTitle } from './canvasService';
 
 export function startScheduler(app: App): void {
@@ -33,8 +33,7 @@ async function runProcess(app: App): Promise<void> {
       .join('\n\n');
 
     await app.client.chat.postMessage({
-      channel: threadChannelId,
-      thread_ts: threadTs,
+      channel: postChannelId,
       text,
       unfurl_links: true,
       unfurl_media: true,

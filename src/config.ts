@@ -36,8 +36,7 @@ export const slackConfig = {
 };
 
 export const canvasId = requireEnv('CANVAS_ID');
-export const threadChannelId = requireEnv('THREAD_CHANNEL_ID');
-export const threadTs = requireEnv('THREAD_TS');
+export const postChannelId = requireEnv('POST_CHANNEL_ID');
 
 export const watchChannelIds: string[] = (process.env.WATCH_CHANNEL_IDS ?? '')
   .split(',')
