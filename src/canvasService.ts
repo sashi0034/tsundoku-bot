@@ -1,6 +1,15 @@
 import * as http from 'http';
 import * as https from 'https';
 import { WebClient } from '@slack/web-api';
+import { slackConfig } from './config';
+
+// ユーザートークンが設定されている場合はそちらを使う（非メンバーチャンネルにもアクセス可能）
+let _userClient: WebClient | null = null;
+function getUserClient(): WebClient | null {
+  if (!slackConfig.userToken) return null;
+  if (!_userClient) _userClient = new WebClient(slackConfig.userToken);
+  return _userClient;
+}
 
 const SLACK_URL_RE = /<(https?:\/\/[^|>\s]+)(?:\|[^>]*)?>/g;
 
@@ -11,6 +20,40 @@ export function extractUrls(text: string): string[] {
     urls.push(m[1]);
   }
   return [...new Set(urls)];
+}
+
+// ---------------------------------------------------------------------------
+// Slack メッセージ URL の解決
+// https://<workspace>.slack.com/archives/<channel>/p<seconds><microseconds>
+// ---------------------------------------------------------------------------
+
+const SLACK_MSG_URL_RE = /https?:\/\/[^./]+\.slack\.com\/archives\/([A-Z0-9]+)\/p(\d{10})(\d{6})/;
+
+export function isSlackMessageUrl(url: string): boolean {
+  return SLACK_MSG_URL_RE.test(url);
+}
+
+export async function resolveSlackMessageUrls(
+  client: WebClient,
+  url: string,
+): Promise<string[]> {
+  const m = url.match(SLACK_MSG_URL_RE);
+  if (!m) return [];
+  const channel = m[1];
+  const ts = `${m[2]}.${m[3]}`;
+
+  // ユーザートークンがあれば非メンバーチャンネルにもアクセス可能
+  const historyClient = getUserClient() ?? client;
+  const result = await historyClient.conversations.history({
+    channel,
+    latest: ts,
+    oldest: ts,
+    inclusive: true,
+    limit: 1,
+  });
+  const msg = result.messages?.[0];
+  if (!msg?.text) return [];
+  return extractUrls(msg.text);
 }
 
 // ---------------------------------------------------------------------------

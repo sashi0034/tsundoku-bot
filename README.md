@@ -2,6 +2,8 @@
 
 Slack に投稿された URL を Slack Canvas に積ん読リストとして追加し、Canvas 上でチェック済みにした URL を定期的に指定スレッドへ投稿する bot です。
 
+ユーザーメッセージだけでなく bot のメッセージも監視対象です。また、メッセージ中の URL が Slack メッセージへのリンク（`https://<workspace>.slack.com/archives/...`）だった場合は、そのリンク自体を登録するのではなく、リンク先メッセージに含まれる URL を代わりに登録します。
+
 ## 必要なもの
 
 - Node.js 20 系
@@ -25,8 +27,8 @@ App-Level Token に必要な scope:
 
 OAuth & Permissions の Bot Token Scopes に以下を追加してください。
 
-- `channels:history`: public channel のメッセージイベントを受け取る
-- `groups:history`: private channel のメッセージイベントを受け取る
+- `channels:history`: public channel のメッセージイベントを受け取る・Slack メッセージリンクの参照先を取得する
+- `groups:history`: private channel のメッセージイベントを受け取る・Slack メッセージリンクの参照先を取得する
 - `chat:write`: チェック済み URL を指定スレッドへ投稿する
 - `canvases:read`: Canvas 内のチェック済み項目を検索する
 - `canvases:write`: Canvas に URL を追加し、チェック済み項目を削除または置換する
@@ -133,10 +135,11 @@ npm start
 ## 動作確認
 
 1. bot を監視対象 channel と投稿先 thread の channel に追加します。
-2. 監視対象 channel に URL を含むメッセージを投稿します。
+2. 監視対象 channel に URL を含むメッセージを投稿します（ユーザー・bot どちらのメッセージも対象です）。
 3. 対象 Canvas の先頭に `- [ ] https://...` の形式で URL が追加されることを確認します（複数 URL は最新が上になります）。
-4. Canvas 上で項目をチェック済み、つまり `- [x] https://...` にします。
-5. 起動直後または次回スケジュール実行時に、チェック済み URL が指定スレッドへ投稿され、Canvas から処理済み項目が削除されることを確認します。
+4. Slack メッセージへのリンク（`https://<workspace>.slack.com/archives/...`）を含むメッセージを投稿します。リンク先メッセージに含まれる URL が Canvas に登録され、Slack リンク自体は登録されないことを確認します。
+5. Canvas 上で項目をチェック済み、つまり `- [x] https://...` にします。
+6. 起動直後または次回スケジュール実行時に、チェック済み URL が指定スレッドへ投稿され、Canvas から処理済み項目が削除されることを確認します。
 
 ## 参考
 

@@ -33,6 +33,7 @@ export const appConfig = loadAppConfig();
 export const slackConfig = {
   botToken: requireEnv('SLACK_BOT_TOKEN'),
   appToken: requireEnv('SLACK_APP_TOKEN'),
+  userToken: process.env.SLACK_USER_TOKEN,
 };
 
 export const canvasId = requireEnv('CANVAS_ID');
