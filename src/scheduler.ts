@@ -31,6 +31,8 @@ async function runProcess(app: App): Promise<void> {
       channel: threadChannelId,
       thread_ts: threadTs,
       text: checkedUrls.join('\n'),
+      unfurl_links: true,
+      unfurl_media: true,
     });
 
     app.logger.info('[scheduler] スレッド投稿完了');
