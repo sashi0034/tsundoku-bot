@@ -1,6 +1,6 @@
 import { App } from '@slack/bolt';
 import { appConfig, canvasId, threadChannelId, threadTs } from './config';
-import { processCheckedItems } from './canvasService';
+import { processCheckedItems, fetchPageTitle } from './canvasService';
 
 export function startScheduler(app: App): void {
   const intervalMs = appConfig.scheduleIntervalMinutes * 60 * 1000;
@@ -27,10 +27,15 @@ async function runProcess(app: App): Promise<void> {
 
     app.logger.info(`[scheduler] ${checkedUrls.length}件をスレッドに投稿します`);
 
+    const titles = await Promise.all(checkedUrls.map((url) => fetchPageTitle(url)));
+    const text = checkedUrls
+      .map((url, i) => (titles[i] ? `${titles[i]}\n${url}` : url))
+      .join('\n\n');
+
     await app.client.chat.postMessage({
       channel: threadChannelId,
       thread_ts: threadTs,
-      text: checkedUrls.join('\n'),
+      text,
       unfurl_links: true,
       unfurl_media: true,
     });

@@ -1,3 +1,4 @@
+import * as http from 'http';
 import * as https from 'https';
 import { WebClient } from '@slack/web-api';
 
@@ -33,6 +34,50 @@ function fetchWithToken(url: string, token: string): Promise<string> {
       res.on('end', () => resolve(buf));
     });
     req.on('error', reject);
+  });
+}
+
+export function fetchPageTitle(url: string): Promise<string | null> {
+  return new Promise((resolve) => {
+    const lib = url.startsWith('https') ? https : http;
+    let resolved = false;
+    const finish = (val: string | null) => {
+      if (!resolved) {
+        resolved = true;
+        resolve(val);
+      }
+    };
+
+    const tryFetch = (targetUrl: string, depth = 0) => {
+      if (depth > 5) { finish(null); return; }
+      const lib2 = targetUrl.startsWith('https') ? https : http;
+      const req = lib2.get(
+        targetUrl,
+        { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; tsundoku-bot/1.0)' } },
+        (res) => {
+          if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+            res.destroy();
+            tryFetch(res.headers.location, depth + 1);
+            return;
+          }
+          let buf = '';
+          res.on('data', (chunk: string) => {
+            buf += chunk;
+            const m = buf.match(/<title[^>]*>([^<]+)<\/title>/i);
+            if (m) { req.destroy(); finish(m[1].trim().replace(/\s+/g, ' ')); }
+          });
+          res.on('end', () => {
+            const m = buf.match(/<title[^>]*>([^<]+)<\/title>/i);
+            finish(m ? m[1].trim().replace(/\s+/g, ' ') : null);
+          });
+        },
+      );
+      req.on('error', () => finish(null));
+      req.setTimeout(5000, () => { req.destroy(); finish(null); });
+    };
+
+    void lib; // suppress unused import warning when url is http
+    tryFetch(url);
   });
 }
 
@@ -86,7 +131,9 @@ export async function addUrlsToCanvas(
   canvasId: string,
   urls: string[],
 ): Promise<void> {
-  const markdown = urls.map((url) => `- [ ] ${url}`).join('\n') + '\n';
+  const titles = await Promise.all(urls.map((url) => fetchPageTitle(url)));
+  const markdown =
+    urls.map((url, i) => `- [ ] ${titles[i] ? `[${titles[i]}](${url})` : url}`).join('\n') + '\n';
 
   let firstUlId: string | null = null;
   try {
