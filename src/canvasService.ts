@@ -139,21 +139,32 @@ interface UrlBlock {
 
 function parseUrlBlocks(html: string): UrlBlock[] {
   const blocks: UrlBlock[] = [];
+  // <ul> 内の各 <li> を個別にパースし、checked 判定も各 <li> 自身の属性のみで行う
   const ulRe = /<ul\b[^>]*\bid='([^']+)'[^>]*>([\s\S]*?)<\/ul>/g;
-  let m: RegExpExecArray | null;
+  let ulMatch: RegExpExecArray | null;
 
-  while ((m = ulRe.exec(html)) !== null) {
-    const ulId = m[1];
-    const content = m[2];
-    const urlMatch = content.match(/\bhref="(https?:\/\/[^"]+)"/);
-    if (!urlMatch) continue;
-    const liIdMatch = content.match(/<li\b[^>]*\bid='([^']+)'/);
-    blocks.push({
-      ulId,
-      liId: liIdMatch ? liIdMatch[1] : ulId,
-      url: urlMatch[1],
-      checked: /\bclass='checked'/.test(content),
-    });
+  while ((ulMatch = ulRe.exec(html)) !== null) {
+    const ulId = ulMatch[1];
+    const ulContent = ulMatch[2];
+
+    const liRe = /<li\b([^>]*)>([\s\S]*?)<\/li>/g;
+    let liMatch: RegExpExecArray | null;
+
+    while ((liMatch = liRe.exec(ulContent)) !== null) {
+      const liAttrs = liMatch[1];
+      const liContent = liMatch[2];
+
+      const urlMatch = liContent.match(/\bhref="(https?:\/\/[^"]+)"/);
+      if (!urlMatch) continue;
+
+      const liIdMatch = liAttrs.match(/\bid='([^']+)'/);
+      blocks.push({
+        ulId,
+        liId: liIdMatch ? liIdMatch[1] : ulId,
+        url: urlMatch[1],
+        checked: /\bclass='checked'/.test(liAttrs),
+      });
+    }
   }
 
   return blocks;

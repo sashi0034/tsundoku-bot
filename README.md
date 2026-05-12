@@ -30,6 +30,7 @@ OAuth & Permissions の Bot Token Scopes に以下を追加してください。
 - `channels:history`: public channel のメッセージイベントを受け取る・Slack メッセージリンクの参照先を取得する
 - `groups:history`: private channel のメッセージイベントを受け取る・Slack メッセージリンクの参照先を取得する
 - `chat:write`: チェック済み URL を指定スレッドへ投稿する
+- `reactions:write`: Canvas への追加完了後にメッセージへ絵文字リアクションを付ける
 - `canvases:read`: Canvas 内のチェック済み項目を検索する
 - `canvases:write`: Canvas に URL を追加し、チェック済み項目を削除または置換する
 - `files:read`: Canvas の生データを取得してチェック状態を読み取る
@@ -65,6 +66,7 @@ oauth_config:
       - canvases:write
       - chat:write
       - files:read
+      - reactions:write
 settings:
   event_subscriptions:
     bot_events:
@@ -136,7 +138,7 @@ npm start
 
 1. bot を監視対象 channel と投稿先 thread の channel に追加します。
 2. 監視対象 channel に URL を含むメッセージを投稿します（ユーザー・bot どちらのメッセージも対象です）。
-3. 対象 Canvas の先頭に `- [ ] https://...` の形式で URL が追加されることを確認します（複数 URL は最新が上になります）。
+3. 対象 Canvas の先頭に `- [ ] https://...` の形式で URL が追加されることを確認します（複数 URL は最新が上になります）。Canvas への追加が完了すると、元のメッセージに :new_moon_with_face: リアクションが付きます。
 4. Slack メッセージへのリンク（`https://<workspace>.slack.com/archives/...`）を含むメッセージを投稿します。リンク先メッセージに含まれる URL が Canvas に登録され、Slack リンク自体は登録されないことを確認します。
 5. Canvas 上で項目をチェック済み、つまり `- [x] https://...` にします。
 6. 起動直後または次回スケジュール実行時に、チェック済み URL が指定スレッドへ投稿され、Canvas から処理済み項目が削除されることを確認します。

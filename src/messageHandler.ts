@@ -46,6 +46,12 @@ export function registerMessageHandler(app: App): void {
     try {
       await addUrlsToCanvas(client, canvasId, urls);
       logger.info('Canvas への追加完了');
+
+      const channel = 'channel' in event ? (event.channel as string) : '';
+      const ts = 'ts' in event ? (event.ts as string) : '';
+      if (channel && ts) {
+        await client.reactions.add({ channel, name: 'new_moon_with_face', timestamp: ts });
+      }
     } catch (error) {
       logger.error('Canvas への追加に失敗:', error);
     }
